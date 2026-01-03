@@ -36,22 +36,26 @@ public sealed class Account : Entity
         );
     }
 
-    public void UpdateName(AccountName newName)
+    public Account UpdateName(AccountName newName)
     {
         if (newName.Value == _name.Value)
             throw new ArgumentException("O novo nome deve ser diferente do nome atual.", nameof(newName));
 
         _name = newName;
         UpdateTimestamp();
+
+        return this;
     }
 
-    public void UpdateType(AccountType newType)
+    public Account UpdateType(AccountType newType)
     {
         if (newType == _type)
             throw new ArgumentException("O novo tipo deve ser diferente do tipo atual.", nameof(newType));
 
         _type = newType;
         UpdateTimestamp();
+
+        return this;
     }
 
     public void Credit(decimal newBalance)
