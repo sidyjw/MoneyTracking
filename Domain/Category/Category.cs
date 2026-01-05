@@ -1,4 +1,4 @@
-namespace Domain;
+namespace Domain.Entities;
 
 public sealed class Category : Entity
 {
@@ -13,6 +13,9 @@ public sealed class Category : Entity
     //TODO: Cor da categoria
 
     public bool IsActive { get; } = true;
+
+    public MonthlyBudget? MonthlyBudget { get => _monthlyBudget; private set => _monthlyBudget = value; }
+    private MonthlyBudget? _monthlyBudget;
 
     public User User { get => _user; }
     private readonly User _user;
@@ -52,6 +55,24 @@ public sealed class Category : Entity
             throw new ArgumentException("O novo tipo deve ser diferente do tipo atual.", nameof(newType));
 
         _type = newType;
+        UpdateTimestamp();
+
+        return this;
+    }
+
+    public Category SetMonthlyBudget(MonthlyBudget monthlyBudget)
+    {
+        ArgumentNullException.ThrowIfNull(monthlyBudget);
+
+        _monthlyBudget = monthlyBudget;
+        UpdateTimestamp();
+
+        return this;
+    }
+
+    public Category RemoveMonthlyBudget()
+    {
+        _monthlyBudget = null;
         UpdateTimestamp();
 
         return this;
