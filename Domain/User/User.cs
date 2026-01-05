@@ -8,11 +8,11 @@ public sealed class User : Entity
     public Email Email { get => _email; private set => _email = value; }
     private Email _email;
 
-    public IReadOnlyList<Account> Accounts => _accounts.AsReadOnly();
-    private List<Account> _accounts = [];
+    public IReadOnlySet<Account> Accounts => _accounts.AsReadOnly();
+    private HashSet<Account> _accounts = [];
 
-    public IReadOnlyList<Category> Categories => _categories.AsReadOnly();
-    private List<Category> _categories = [];
+    public IReadOnlySet<Category> Categories => _categories.AsReadOnly();
+    private HashSet<Category> _categories = [];
 
     internal User(Guid id, UserFullName name, Email email) : base(id)
     {
@@ -56,9 +56,6 @@ public sealed class User : Entity
     {
         ArgumentNullException.ThrowIfNull(newCategory);
 
-        if (_categories.Contains(newCategory))
-            throw new ArgumentException("A categoria já foi adicionada ao usuário.", nameof(newCategory));
-
         if (_categories.Any(c => c.Name == newCategory.Name && c.Type == newCategory.Type))
             throw new ArgumentException($"Já existe uma categoria com esse nome ({nameof(newCategory.Name)}) e tipo ({newCategory.Type.Value})", nameof(newCategory));
 
@@ -84,9 +81,6 @@ public sealed class User : Entity
     public User AddAccount(Account newAccount)
     {
         ArgumentNullException.ThrowIfNull(newAccount);
-
-        if (_accounts.Contains(newAccount))
-            throw new ArgumentException("A conta já foi adicionada ao usuário.", nameof(newAccount));
 
         if (_accounts.Any(a => a.Name == newAccount.Name && a.Type == newAccount.Type))
             throw new ArgumentException($"Já existe uma conta com esse nome ({nameof(newAccount.Name)}) e tipo ({newAccount.Type.Value})", nameof(newAccount));

@@ -11,28 +11,33 @@ public sealed class Account : Entity
     public Balance Balance { get => _balance; }
     private Balance _balance;
 
+    public IReadOnlySet<Transaction>? Transactions => _transactions?.AsReadOnly();
+    private HashSet<Transaction>? _transactions = [];
+
     public User User { get => _user; }
     private readonly User _user;
 
     public bool IsActive { get; } = true;
 
-    internal Account(Guid id, AccountName name, AccountType type, Balance balance, User user) : base(id)
+    internal Account(Guid id, AccountName name, AccountType type, Balance balance, User user, HashSet<Transaction>? transactions) : base(id)
     {
         Id = id;
         _name = name;
         _type = type;
         _balance = balance;
         _user = user;
+        _transactions = transactions;
     }
 
-    public static Account Create(User user, AccountName name, AccountType type, Balance balance)
+    public static Account Create(User user, AccountName name, AccountType type, Balance balance, HashSet<Transaction>? transactions)
     {
         return new Account(
             Guid.NewGuid(),
             name,
             type,
             balance,
-            user
+            user,
+            transactions
         );
     }
 
@@ -58,15 +63,23 @@ public sealed class Account : Entity
         return this;
     }
 
-    public void Credit(decimal newBalance)
+    public void Credit(Transaction newTransaction)
     {
-        _balance += newBalance;
+        if (newTransaction.Type != TransactionType.Income)
+            throw new ArgumentException("A transação deve ser do tipo crédito.", nameof(newTransaction));
+
+        _transactions?.Add(newTransaction);
+        _balance += newTransaction.Amount;
         UpdateTimestamp();
     }
 
-    public void Debit(decimal newBalance)
+    public void Debit(Transaction newTransaction)
     {
-        _balance -= newBalance;
+        if (newTransaction.Type != TransactionType.Expense)
+            throw new ArgumentException("A transação deve ser do tipo débito.", nameof(newTransaction));
+
+        _transactions?.Add(newTransaction);
+        _balance -= newTransaction.Amount;
         UpdateTimestamp();
     }
 }
