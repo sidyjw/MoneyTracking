@@ -14,29 +14,24 @@ public sealed class Account : Entity
     public IReadOnlySet<Transaction>? Transactions => _transactions?.AsReadOnly();
     private HashSet<Transaction>? _transactions = [];
 
-    public User User { get => _user; }
-    private readonly User _user;
-
     public bool IsActive { get; } = true;
 
-    internal Account(Guid id, AccountName name, AccountType type, Balance balance, User user, HashSet<Transaction>? transactions) : base(id)
+    internal Account(Guid id, AccountName name, AccountType type, Balance balance, HashSet<Transaction>? transactions) : base(id)
     {
         Id = id;
         _name = name;
         _type = type;
         _balance = balance;
-        _user = user;
         _transactions = transactions;
     }
 
-    public static Account Create(User user, AccountName name, AccountType type, Balance balance, HashSet<Transaction>? transactions)
+    public static Account Create(AccountName name, AccountType type, Balance balance, HashSet<Transaction>? transactions)
     {
         return new Account(
             Guid.NewGuid(),
             name,
             type,
             balance,
-            user,
             transactions
         );
     }
@@ -69,7 +64,7 @@ public sealed class Account : Entity
             throw new ArgumentException("A transação deve ser do tipo crédito.", nameof(newTransaction));
 
         _transactions?.Add(newTransaction);
-        _balance += newTransaction.Amount;
+        _balance += newTransaction.Amount.Value;
         UpdateTimestamp();
     }
 
@@ -79,7 +74,7 @@ public sealed class Account : Entity
             throw new ArgumentException("A transação deve ser do tipo débito.", nameof(newTransaction));
 
         _transactions?.Add(newTransaction);
-        _balance -= newTransaction.Amount;
+        _balance -= newTransaction.Amount.Value;
         UpdateTimestamp();
     }
 }

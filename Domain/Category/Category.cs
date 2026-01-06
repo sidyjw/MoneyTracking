@@ -17,24 +17,19 @@ public sealed class Category : Entity
     public MonthlyBudget? MonthlyBudget { get => _monthlyBudget; private set => _monthlyBudget = value; }
     private MonthlyBudget? _monthlyBudget;
 
-    public User User { get => _user; }
-    private readonly User _user;
-
-    internal Category(Guid id, CategoryName name, CategoryType type, User user) : base(id)
+    internal Category(Guid id, CategoryName name, CategoryType type) : base(id)
     {
         Id = id;
         _name = name;
         _type = type;
-        _user = user;
     }
 
-    public static Category Create(User user, CategoryName name, CategoryType type)
+    public static Category Create(CategoryName name, CategoryType type)
     {
         return new Category(
             Guid.NewGuid(),
             name,
-            type,
-            user
+            type
         );
     }
 
