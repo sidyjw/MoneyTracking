@@ -2,16 +2,22 @@ namespace Domain.ValueObjects;
 
 public record CategoryName
 {
-    public string Value { get; } = string.Empty;
-    public CategoryName(string value)
+    public string Value { get; }
+
+    private CategoryName(string value)
+    {
+        Value = value.Trim();
+    }
+
+    public static ResultT<CategoryName> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("O nome da categoria não pode ser vazio ou nulo.", nameof(value));
+            return Error.Validation(CategoryNameErrors.EmptyOrNull, "O nome da categoria não pode ser vazio ou nulo.");
 
         if (value.Length < 3 || value.Length > 50)
-            throw new ArgumentException("O nome da categoria deve ter entre 3 e 50 caracteres.", nameof(value));
+            return Error.Validation(CategoryNameErrors.InvalidLength, "O nome da categoria deve ter entre 3 e 50 caracteres.");
 
-        Value = value.Trim();
+        return new CategoryName(value);
     }
 
     public override string ToString() => Value;

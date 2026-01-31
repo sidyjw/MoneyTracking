@@ -1,4 +1,4 @@
-namespace Domain;
+namespace Domain.Entities;
 
 public sealed class User : Entity
 {
@@ -18,46 +18,75 @@ public sealed class User : Entity
     {
         Id = id;
         _name = name;
-        _email = new Email(email);
+        _email = email;
     }
 
-    public static User Create(string name, string email)
+    public static ResultT<User> Create(string name, string email)
     {
+        var nameResult = UserFullName.Create(name);
+        var emailResult = Email.Create(email);
+
+        if (nameResult.IsFailure || emailResult.IsFailure)
+        {
+            var errors = new List<Error>();
+            if (nameResult.IsFailure) errors.AddRange(nameResult.Errors!);
+            if (emailResult.IsFailure) errors.AddRange(emailResult.Errors!);
+            return ResultT<User>.Failure(errors);
+        }
+
         return new User(
             Guid.NewGuid(),
-            new UserFullName(name),
-            new Email(email)
+            nameResult.Value,
+            emailResult.Value
         );
     }
 
-    public User UpdateName(string newName)
+    public ResultT<User> UpdateName(string newName)
     {
         if (newName == _name.Full)
-            throw new ArgumentException("O novo nome deve ser diferente do nome atual.", nameof(newName));
+            AddError(Error.Validation(UserErrors.NameUnchanged, "O novo nome deve ser diferente do nome atual."));
 
-        _name = new UserFullName(newName);
+        var nameResult = UserFullName.Create(newName);
+        if (nameResult.IsFailure)
+            AddErrors(nameResult.Errors!);
+
+        if (HasValidationErrors())
+            return GetValidationErrors();
+
+        _name = nameResult.Value;
         UpdateTimestamp();
 
         return this;
     }
 
-    public User UpdateEmail(string newEmail)
+    public ResultT<User> UpdateEmail(string newEmail)
     {
         if (newEmail == _email.Value)
-            throw new ArgumentException("O novo email deve ser diferente do email atual.", nameof(newEmail));
+            AddError(Error.Validation(UserErrors.EmailUnchanged, "O novo email deve ser diferente do email atual."));
 
-        _email = new Email(newEmail);
+        var emailResult = Email.Create(newEmail);
+        if (emailResult.IsFailure)
+            AddErrors(emailResult.Errors!);
+
+        if (HasValidationErrors())
+            return GetValidationErrors();
+
+        _email = emailResult.Value;
         UpdateTimestamp();
 
         return this;
     }
 
-    public User AddCategory(Category newCategory)
+    public ResultT<User> AddCategory(Category newCategory)
     {
-        ArgumentNullException.ThrowIfNull(newCategory);
+        if (newCategory is null)
+            AddError(Error.Validation("User.CategoryNull", "A categoria não pode ser nula."));
 
         if (_categories.Any(c => c.Name == newCategory.Name && c.Type == newCategory.Type))
-            throw new ArgumentException($"Já existe uma categoria com esse nome ({nameof(newCategory.Name)}) e tipo ({newCategory.Type.Value})", nameof(newCategory));
+            AddError(Error.Conflict(UserErrors.CategoryAlreadyExists, $"Já existe uma categoria com esse nome ({newCategory.Name.Value}) e tipo ({newCategory.Type.Value})"));
+
+        if (HasValidationErrors())
+            return GetValidationErrors();
 
         _categories.Add(newCategory);
         UpdateTimestamp();
@@ -65,12 +94,16 @@ public sealed class User : Entity
         return this;
     }
 
-    public User RemoveCategory(Category categoryToRemove)
+    public ResultT<User> RemoveCategory(Category categoryToRemove)
     {
-        ArgumentNullException.ThrowIfNull(categoryToRemove);
+        if (categoryToRemove is null)
+            AddError(Error.Validation("User.CategoryNull", "A categoria não pode ser nula."));
 
         if (!_categories.Contains(categoryToRemove))
-            throw new ArgumentException("A categoria não foi encontrada no usuário.", nameof(categoryToRemove));
+            AddError(Error.NotFound(UserErrors.CategoryNotFound, "A categoria não foi encontrada no usuário."));
+
+        if (HasValidationErrors())
+            return GetValidationErrors();
 
         _categories.Remove(categoryToRemove);
         UpdateTimestamp();
@@ -78,12 +111,16 @@ public sealed class User : Entity
         return this;
     }
 
-    public User AddAccount(Account newAccount)
+    public ResultT<User> AddAccount(Account newAccount)
     {
-        ArgumentNullException.ThrowIfNull(newAccount);
+        if (newAccount is null)
+            AddError(Error.Validation("User.AccountNull", "A conta não pode ser nula."));
 
         if (_accounts.Any(a => a.Name == newAccount.Name && a.Type == newAccount.Type))
-            throw new ArgumentException($"Já existe uma conta com esse nome ({nameof(newAccount.Name)}) e tipo ({newAccount.Type.Value})", nameof(newAccount));
+            AddError(Error.Conflict(UserErrors.AccountAlreadyExists, $"Já existe uma conta com esse nome ({newAccount.Name.Value}) e tipo ({newAccount.Type.Value})"));
+
+        if (HasValidationErrors())
+            return GetValidationErrors();
 
         _accounts.Add(newAccount);
         UpdateTimestamp();

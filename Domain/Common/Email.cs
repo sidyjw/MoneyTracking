@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Domain.Common;
+namespace Domain.ValueObjects;
 
 public record Email
 {
@@ -11,15 +11,20 @@ public record Email
 
     public string Value { get; }
 
-    public Email(string value)
+    private Email(string value)
+    {
+        Value = value.Trim().ToLowerInvariant();
+    }
+
+    public static ResultT<Email> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("O email não pode ser vazio ou nulo.", nameof(value));
+            return Error.Validation(EmailErrors.EmptyOrNull, "O email não pode ser vazio ou nulo.");
 
         if (!EmailRegex.IsMatch(value))
-            throw new ArgumentException($"O email '{value}' não é válido.", nameof(value));
+            return Error.Validation(EmailErrors.InvalidFormat, $"O email '{value}' não é válido.");
 
-        Value = value.Trim().ToLowerInvariant();
+        return new Email(value);
     }
 
     public override string ToString() => Value;

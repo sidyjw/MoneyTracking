@@ -35,15 +35,9 @@ public sealed class Transaction : Entity
         _category = category;
     }
 
-    public static Transaction Create(TransactionAmount amount, TransactionType type, DateTimeOffset date, TransactionDescription? description, Account account, Category category)
+    public static ResultT<Transaction> Create(TransactionAmount amount, TransactionType type, DateTimeOffset date, TransactionDescription? description, Account account, Category category)
     {
-        if (type == TransactionType.Income && amount.Value <= 0)
-            throw new ArgumentException("O valor de crédito deve ser positivo.", nameof(amount));
-
-        if (type == TransactionType.Expense && amount.Value >= 0)
-            throw new ArgumentException("O valor de débito deve ser negativo.", nameof(amount));
-
-        return new Transaction(
+        var transaction = new Transaction(
             Guid.NewGuid(),
             amount,
             date,
@@ -52,5 +46,16 @@ public sealed class Transaction : Entity
             category,
             type
         );
+
+        if (type == TransactionType.Income && amount.Value <= 0)
+            transaction.AddError(Error.Validation(TransactionErrors.InvalidIncomeAmount, "O valor de crédito deve ser positivo."));
+
+        if (type == TransactionType.Expense && amount.Value >= 0)
+            transaction.AddError(Error.Validation(TransactionErrors.InvalidExpenseAmount, "O valor de débito deve ser negativo."));
+
+        if (transaction.HasValidationErrors())
+            return transaction.GetValidationErrors();
+
+        return transaction;
     }
 }

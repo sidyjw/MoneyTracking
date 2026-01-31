@@ -1,18 +1,23 @@
-namespace Domain;
+namespace Domain.ValueObjects;
 
 public record AccountName
 {
     public string Value { get; }
 
-    public AccountName(string value)
+    private AccountName(string value)
+    {
+        Value = value.Trim();
+    }
+
+    public static ResultT<AccountName> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("O nome da conta não pode ser vazio ou nulo.", nameof(value));
+            return Error.Validation(AccountNameErrors.EmptyOrNull, "O nome da conta não pode ser vazio ou nulo.");
 
         if (value.Length < 3 || value.Length > 50)
-            throw new ArgumentException("O nome da conta deve ter entre 3 e 50 caracteres.", nameof(value));
+            return Error.Validation(AccountNameErrors.InvalidLength, "O nome da conta deve ter entre 3 e 50 caracteres.");
 
-        Value = value.Trim();
+        return new AccountName(value);
     }
 
     public override string ToString() => Value;

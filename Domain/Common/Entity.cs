@@ -7,6 +7,8 @@ public abstract class Entity : IEquatable<Entity>
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? UpdatedAt { get; set; }
 
+    protected List<Error> ValidationErrors { get; private set; } = [];
+
     protected Entity(Guid id)
     {
         this.Id = id;
@@ -17,7 +19,31 @@ public abstract class Entity : IEquatable<Entity>
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
-    // Igualdade por identidade (Id)
+    protected void AddError(Error error)
+    {
+        ValidationErrors.Add(error);
+    }
+
+    protected void AddErrors(List<Error> errors)
+    {
+        ValidationErrors.AddRange(errors);
+    }
+
+    protected bool HasValidationErrors()
+    {
+        return ValidationErrors.Count > 0;
+    }
+
+    protected List<Error> GetValidationErrors()
+    {
+        return ValidationErrors;
+    }
+
+    protected void ClearValidationErrors()
+    {
+        ValidationErrors.Clear();
+    }
+
     public override bool Equals(object? obj)
     {
         if (obj is not Entity other) return false;

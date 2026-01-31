@@ -11,8 +11,6 @@ public sealed class MonthlyBudget : Entity
     public Category Category { get => _category; private set => _category = value; }
     private Category _category;
 
-    public User User => _category.User;
-
     internal MonthlyBudget(Guid id, decimal amount, MonthYear monthYear, Category category) : base(id)
     {
         Id = id;

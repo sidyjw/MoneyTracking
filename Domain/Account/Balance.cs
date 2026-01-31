@@ -1,37 +1,37 @@
-using System.Numerics;
+namespace Domain.ValueObjects;
 
-public class Balance
+public record Balance
 {
-    public decimal Amount { get => _amount; private set => _amount = value; }
+    public decimal Amount { get; }
 
-    private decimal _amount;
-
-    public Balance(decimal amount)
+    private Balance(decimal amount)
     {
         Amount = amount;
     }
 
-    public decimal Credit(decimal amount)
+    public static ResultT<Balance> Create(decimal amount)
+    {
+        return new Balance(amount);
+    }
+
+    public ResultT<Balance> Credit(decimal amount)
     {
         if (amount <= 0)
-            throw new ArgumentException("O valor de crédito deve ser positivo.", nameof(amount));
+            return Error.Validation(BalanceErrors.InvalidCreditAmount, "O valor de crédito deve ser positivo.");
 
-        _amount += amount;
-        return Amount;
+        return new Balance(Amount + amount);
     }
 
 
-    public decimal Debit(decimal amount)
+    public ResultT<Balance> Debit(decimal amount)
     {
         if (amount >= 0)
-            throw new ArgumentException("O valor de débito deve ser negativo.", nameof(amount));
+            return Error.Validation(BalanceErrors.InvalidDebitAmount, "O valor de débito deve ser negativo.");
 
-        _amount -= amount;
-        return Amount;
+        return new Balance(Amount - amount);
     }
 
+    public static implicit operator decimal(Balance balance) => balance.Amount;
 
-    public void operator +=(decimal balance) => Credit(balance);
-
-    public void operator -=(decimal balance) => Debit(balance);
+    public static implicit operator Balance(decimal amount) => new(amount);
 }

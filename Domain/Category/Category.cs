@@ -24,7 +24,7 @@ public sealed class Category : Entity
         _type = type;
     }
 
-    public static Category Create(CategoryName name, CategoryType type)
+    public static ResultT<Category> Create(CategoryName name, CategoryType type)
     {
         return new Category(
             Guid.NewGuid(),
@@ -33,10 +33,10 @@ public sealed class Category : Entity
         );
     }
 
-    public Category UpdateName(CategoryName newName)
+    public ResultT<Category> UpdateName(CategoryName newName)
     {
         if (newName == _name)
-            throw new ArgumentException("O novo nome deve ser diferente do nome atual.", nameof(newName));
+            return Error.Validation(CategoryErrors.NameUnchanged, "O novo nome deve ser diferente do nome atual.");
 
         _name = newName;
         UpdateTimestamp();
@@ -44,10 +44,10 @@ public sealed class Category : Entity
         return this;
     }
 
-    public Category UpdateType(CategoryType newType)
+    public ResultT<Category> UpdateType(CategoryType newType)
     {
         if (newType == _type)
-            throw new ArgumentException("O novo tipo deve ser diferente do tipo atual.", nameof(newType));
+            return Error.Validation(CategoryErrors.TypeUnchanged, "O novo tipo deve ser diferente do tipo atual.");
 
         _type = newType;
         UpdateTimestamp();
@@ -55,9 +55,10 @@ public sealed class Category : Entity
         return this;
     }
 
-    public Category SetMonthlyBudget(MonthlyBudget monthlyBudget)
+    public ResultT<Category> SetMonthlyBudget(MonthlyBudget monthlyBudget)
     {
-        ArgumentNullException.ThrowIfNull(monthlyBudget);
+        if (monthlyBudget is null)
+            return Error.Validation(CategoryErrors.MonthlyBudgetNull, "O orçamento mensal não pode ser nulo.");
 
         _monthlyBudget = monthlyBudget;
         UpdateTimestamp();
@@ -65,8 +66,14 @@ public sealed class Category : Entity
         return this;
     }
 
-    public Category RemoveMonthlyBudget()
+    public ResultT<Category> RemoveMonthlyBudget()
     {
+        if (_monthlyBudget is null)
+            AddError(Error.Validation(CategoryErrors.MonthlyBudgetNull, "O orçamento mensal já está nulo."));
+
+        if (HasValidationErrors())
+            return GetValidationErrors();
+
         _monthlyBudget = null;
         UpdateTimestamp();
 

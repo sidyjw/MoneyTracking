@@ -1,4 +1,4 @@
-namespace Domain;
+namespace Domain.ValueObjects;
 
 public record UserFullName
 {
@@ -6,24 +6,32 @@ public record UserFullName
     public string LastName { get; }
     public string Full => $"{FirstName} {LastName}";
 
-    public UserFullName(string fullName)
+    private UserFullName(string firstName, string lastName)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+    }
+
+    public static ResultT<UserFullName> Create(string fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName))
-            throw new ArgumentException("Name cannot be null or empty.", nameof(fullName));
+            return Error.Validation(UserFullNameErrors.EmptyOrNull, "Name cannot be null or empty.");
 
         var nameParts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         if (nameParts.Length < 2)
-            throw new ArgumentException("Name must contain at least first name and last name.", nameof(fullName));
+            return Error.Validation(UserFullNameErrors.TooShort, "Name must contain at least first name and last name.");
 
         if (nameParts.Any(part => part.Length < 2))
-            throw new ArgumentException("Each part of the name must have at least 2 characters.", nameof(fullName));
+            return Error.Validation(UserFullNameErrors.InvalidLength, "Each part of the name must have at least 2 characters.");
 
         if (nameParts.Any(part => !part.All(c => char.IsLetter(c) || char.IsWhiteSpace(c))))
-            throw new ArgumentException("Name must contain only letters.", nameof(fullName));
+            return Error.Validation(UserFullNameErrors.InvalidCharacters, "Name must contain only letters.");
 
-        FirstName = CapitalizeName(nameParts[0]);
-        LastName = CapitalizeName(string.Join(" ", nameParts.Skip(1)));
+        var firstName = CapitalizeName(nameParts[0]);
+        var lastName = CapitalizeName(string.Join(" ", nameParts.Skip(1)));
+
+        return new UserFullName(firstName, lastName);
     }
 
     private static string CapitalizeName(string name)
