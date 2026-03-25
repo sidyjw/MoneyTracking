@@ -89,6 +89,7 @@ dotnet test Tests/Tests.csproj                                   # Run tests for
 - **Features** must call `entity.ClearValidationErrors()` before calling entity methods to ensure clean state
 - Entities accumulate errors across method calls
 - Return all accumulated errors when `HasValidationErrors()` is true
+- **When validating null parameters, return early immediately after adding the error to avoid CS8602 warnings**
 
 ### Formatting & Structure
 - File-scoped namespaces
@@ -170,6 +171,28 @@ public ResultT<User> UpdateName(string newName)
         return GetValidationErrors();
     
     _name = nameResult.Value;
+    UpdateTimestamp();
+    return this;
+}
+```
+
+#### Entity Method with Null Parameter Validation
+```csharp
+public ResultT<User> AddCategory(Category newCategory)
+{
+    if (newCategory is null)
+    {
+        AddError(Error.Validation("User.CategoryNull", "The category cannot be null."));
+        return GetValidationErrors();
+    }
+
+    if (_categories.Any(c => c.Name == newCategory.Name && c.Type == newCategory.Type))
+        AddError(Error.Conflict(UserErrors.CategoryAlreadyExists, "Category already exists"));
+
+    if (HasValidationErrors())
+        return GetValidationErrors();
+
+    _categories.Add(newCategory);
     UpdateTimestamp();
     return this;
 }

@@ -80,7 +80,10 @@ public sealed class User : Entity
     public ResultT<User> AddCategory(Category newCategory)
     {
         if (newCategory is null)
+        {
             AddError(Error.Validation("User.CategoryNull", "A categoria não pode ser nula."));
+            return GetValidationErrors();
+        }
 
         if (_categories.Any(c => c.Name == newCategory.Name && c.Type == newCategory.Type))
             AddError(Error.Conflict(UserErrors.CategoryAlreadyExists, $"Já existe uma categoria com esse nome ({newCategory.Name.Value}) e tipo ({newCategory.Type.Value})"));
@@ -97,7 +100,10 @@ public sealed class User : Entity
     public ResultT<User> RemoveCategory(Category categoryToRemove)
     {
         if (categoryToRemove is null)
+        {
             AddError(Error.Validation("User.CategoryNull", "A categoria não pode ser nula."));
+            return GetValidationErrors();
+        }
 
         if (!_categories.Contains(categoryToRemove))
             AddError(Error.NotFound(UserErrors.CategoryNotFound, "A categoria não foi encontrada no usuário."));
@@ -114,7 +120,10 @@ public sealed class User : Entity
     public ResultT<User> AddAccount(Account newAccount)
     {
         if (newAccount is null)
+        {
             AddError(Error.Validation("User.AccountNull", "A conta não pode ser nula."));
+            return GetValidationErrors();
+        }
 
         if (_accounts.Any(a => a.Name == newAccount.Name && a.Type == newAccount.Type))
             AddError(Error.Conflict(UserErrors.AccountAlreadyExists, $"Já existe uma conta com esse nome ({newAccount.Name.Value}) e tipo ({newAccount.Type.Value})"));

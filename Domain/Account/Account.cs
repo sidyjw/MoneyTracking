@@ -65,7 +65,10 @@ public sealed class Account : Entity
     public ResultT<Account> Credit(Transaction newTransaction)
     {
         if (newTransaction is null)
+        {
             AddError(Error.Validation(AccountErrors.TransactionNull, "A transação não pode ser nula."));
+            return GetValidationErrors();
+        }
 
         if (newTransaction.Type != TransactionType.Income)
             AddError(Error.Validation(AccountErrors.InvalidTransactionType, "A transação deve ser do tipo crédito."));
@@ -85,7 +88,10 @@ public sealed class Account : Entity
     public ResultT<Account> Debit(Transaction newTransaction)
     {
         if (newTransaction is null)
+        {
             AddError(Error.Validation(AccountErrors.TransactionNull, "A transação não pode ser nula."));
+            return GetValidationErrors();
+        }
 
         if (newTransaction.Type != TransactionType.Expense)
             AddError(Error.Validation(AccountErrors.InvalidTransactionType, "A transação deve ser do tipo débito."));

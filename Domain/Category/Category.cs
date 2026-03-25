@@ -69,10 +69,10 @@ public sealed class Category : Entity
     public ResultT<Category> RemoveMonthlyBudget()
     {
         if (_monthlyBudget is null)
+        {
             AddError(Error.Validation(CategoryErrors.MonthlyBudgetNull, "O orçamento mensal já está nulo."));
-
-        if (HasValidationErrors())
             return GetValidationErrors();
+        }
 
         _monthlyBudget = null;
         UpdateTimestamp();
